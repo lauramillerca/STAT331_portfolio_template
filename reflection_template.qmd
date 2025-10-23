@@ -41,11 +41,17 @@ teacher_evals <- read_csv(file = here("Week 3", "teacher_evals.csv"))
 
 **WD-2: I can select necessary columns from a dataset.**
 
--   Example selecting specified columns
+-   Example selecting specified columns: Lab 3 Question 5
 
 ```{r}
 #| label: wd-2-ex-1
-
+teacher_evals_clean <- teacher_evals |>
+  rename(sex = gender) |>
+  filter(no_participants >= 10) |>
+  mutate(teacher_id = as.character(teacher_id),
+         course_id = as.character(course_id)) |>
+  select(course_id, teacher_id, question_no, no_participants, resp_share, 
+         SET_score_avg, percent_failed_cur, academic_degree, seniority, sex)
 ```
 
 -   Example removing specified columns
@@ -64,39 +70,64 @@ teacher_evals <- read_csv(file = here("Week 3", "teacher_evals.csv"))
 
 **WD-3: I can filter rows from a dataframe for a *variety* of data types (e.g., numeric, integer, character, factor, date).**
 
--   Numeric Example 1
+-   Numeric Example 1: Challenge 3 Question 1
 
 ```{r}
 #| label: wd-3-numeric-ex-1
-
+teacher_evals_compare <- teacher_evals |>
+  filter(question_no == 903) |>
+  mutate(SET_level = if_else(SET_score_avg >= 4, "excellent", "standard"),
+         sen_level = case_when(seniority <= 4 ~ "junior",
+                               seniority > 4 ~ "senior")) |>
+  select(course_id, SET_level, sen_level)
 ```
 
--   Numeric Example 2
+-   Numeric Example 2: Lab 4 Question 6
 
 ```{r}
 #| label: wd-3-numeric-ex-1
-
+infant_cost_2018 <- ca_childcare |>
+  filter(study_year == 2018) |>
+  group_by(census_region) |>
+  summarize(med_mc_infant = median(mc_infant, na.rm = TRUE),
+            .groups = "drop") |>
+  arrange(desc(med_mc_infant))
 ```
 
--   Character Example 1 (any context)
+-   Character Example 1 (any context): Lab 4 Question 2
 
 ```{r}
 #| label: wd-3-character
-
+ca_childcare <- childcare_costs |>
+  left_join(x = childcare_costs,
+            y = counties,
+            by = join_by(county_fips_code == county_fips_code)) |>
+  filter(state_abbreviation == "CA") 
 ```
 
--   Character Example 2 (example must use functions from **stringr**)
+-   Character Example 2 (example must use functions from **stringr**): Lab 3 Question 12
 
 ```{r}
 #| label: wd-3-string
-
+resp_avg <- teacher_evals_clean |>
+  filter(academic_degree %in% c("dr", "prof")) |>
+  group_by(teacher_id, seniority, sex) |>
+  summarise(n_courses = n_distinct(course_id),
+            avg_resp = mean(resp_share, na.rm = TRUE),
+            .groups = "drop")
 ```
 
--   Date (example must use functions from **lubridate**)
+-   Date (example must use functions from **lubridate**): Lab 5
 
 ```{r}
 #| label: wd-3-date
-
+suspect_check_in <- get_fit_now_check_in |>
+  inner_join(get_fit_now_member, by = c("membership_id" = "id")) |>
+  mutate(membership_id = as.character(membership_id),
+         check_in_date = ymd(as.character(check_in_date))) |>
+  filter(check_in_date == as.Date("2018-01-09"), 
+         str_detect(membership_id, "^48Z"))
+suspect_check_in
 ```
 
 **WD-4: I can modify existing variables and create new variables in a dataframe for a *variety* of data types (e.g., numeric, integer, character, factor, date).**
