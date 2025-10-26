@@ -758,25 +758,52 @@ infant_cost_2018
 
 ```
 
--   I can modify the layout of my table to be more readable (e.g., `pivot_longer()` or `pivot_wider()`) :
+-   I can modify the layout of my table to be more readable (e.g., `pivot_longer()` or `pivot_wider()`) : Challenge 4
 
 ```{r}
 #| label: dvs-7-ex-2
+med_childcare_cost_by_setting <- ca_childcare |>
+  select(study_year, mcsa, mfccsa) |>
+  pivot_longer(cols = c(mcsa, mfccsa),
+               names_to = "setting",
+               values_to = "cost") |>
+  group_by(setting, study_year) |>
+  summarise(median_cost = median(cost, na.rm = TRUE),
+            .groups = "drop") |>
+  pivot_wider(names_from = study_year,
+              values_from = median_cost,
+              names_prefix = "year_") |>
+  arrange(setting, desc(year_2018))
 
+med_childcare_cost_by_setting
 ```
 
 ## Program Efficiency
 
 **PE-1: I can write concise code which does not repeat itself.**
 
--   using a single function call with multiple inputs (rather than multiple function calls)
+-   using a single function call with multiple inputs (rather than multiple function calls): Lab 4 Question 5
 
 ```{r}
 #| label: pe-1-one-call
+med_income_by_region <- ca_childcare |>
+  select(census_region, study_year, mhi_2018) |>
+  group_by(census_region, study_year) |>
+  summarize(median_income = median(mhi_2018, 
+                                   na.rm = TRUE), 
+            .groups = "drop") |>
+  pivot_wider(names_from = study_year,
+              values_from = median_income,
+              names_prefix = "year_") |>
+  select(census_region, year_2008, year_2018) |>
+  arrange(desc(year_2018)) |>
+  rename(median_income_2008 = year_2008,
+         median_income_2018 = year_2018)
 
+med_income_by_region
 ```
 
--   using `across()`
+-   using `across()` :
 
 ```{r}
 #| label: pe-1-across
@@ -792,25 +819,74 @@ infant_cost_2018
 
 **PE-2: I can write functions to reduce repetition in my code.**
 
--   Example 1: Function that operates on vectors
+-   Example 1: Function that operates on vectors: Lab 3 Question 12
 
 ```{r}
 #| label: pe-2-1
+resp_avg <- teacher_evals_clean |>
+  filter(academic_degree %in% c("dr", "prof")) |>
+  group_by(teacher_id, seniority, sex) |>
+  summarise(n_courses = n_distinct(course_id),
+            avg_resp = mean(resp_share, na.rm = TRUE),
+            .groups = "drop")
 
+highest_resp_avg <- resp_avg |>
+  filter(avg_resp == max(avg_resp))
+
+lowest_resp_avg <- resp_avg |>
+  filter(avg_resp == min(avg_resp))
+
+highest_resp_avg
 ```
 
--   Example 2: Function that operates on data frames
+-   Example 2: Function that operates on data frames: Lab 4 Question 5
 
 ```{r}
 #| label: pe-2-2
+med_income_by_region <- ca_childcare |>
+  select(census_region, study_year, mhi_2018) |>
+  group_by(census_region, study_year) |>
+  summarize(median_income = median(mhi_2018, 
+                                   na.rm = TRUE), 
+            .groups = "drop") |>
+  pivot_wider(names_from = study_year,
+              values_from = median_income,
+              names_prefix = "year_") |>
+  select(census_region, year_2008, year_2018) |>
+  arrange(desc(year_2018)) |>
+  rename(median_income_2008 = year_2008,
+         median_income_2018 = year_2018)
 
+med_income_by_region
 ```
 
--   Example 3: Function that operates on vectors *or* data frames
+-   Example 3: Function that operates on vectors *or* data frames: Challenge 4
 
 ```{r}
 #| label: pe-2-3
+med_childcare_cost_by_setting <- ca_childcare |>
+  mutate(study_year = as.integer(study_year)) |>
+  select(study_year, mcsa, mfccsa) |>
+  pivot_longer(cols = c(mcsa, mfccsa),
+               names_to = "setting",
+               values_to = "cost") |>
+  group_by(setting, study_year) |>
+  summarise(median_cost = median(cost, na.rm = TRUE),
+            .groups = "drop")
 
+ggplot(med_childcare_cost_by_setting, aes(x = study_year,
+                                          y = median_cost,
+                                          color = setting)) +
+    geom_line(size = 1) +
+    geom_point(size = 2, alpha = 0.5) +
+    scale_x_continuous(breaks = 
+                         seq(min(med_childcare_cost_by_setting$study_year),
+                        max(med_childcare_cost_by_setting$study_year), by = 1)) +
+    labs(title = "Median Full-Time Weekly Childcare Costs in CA by Setting",
+         x = "Study Year",
+         y = "Median Weekly Cost ($)",
+         color = "Setting") +
+    theme_bw()
 ```
 
 **PE-3:I can use iteration to reduce repetition in my code.**
@@ -845,29 +921,53 @@ infant_cost_2018
 
 ```
 
--   I can connect a data wrangling pipeline into a `ggplot()`
+-   I can connect a data wrangling pipeline into a `ggplot()` : Challenge 4
 
 ```{r}
 #| label: pe-4-2
+med_childcare_cost_by_setting <- ca_childcare |>
+  mutate(study_year = as.integer(study_year)) |>
+  select(study_year, mcsa, mfccsa) |>
+  pivot_longer(cols = c(mcsa, mfccsa),
+               names_to = "setting",
+               values_to = "cost") |>
+  group_by(setting, study_year) |>
+  summarise(median_cost = median(cost, na.rm = TRUE),
+            .groups = "drop")
 
+ggplot(med_childcare_cost_by_setting, aes(x = study_year,
+                                          y = median_cost,
+                                          color = setting)) +
+    geom_line(size = 1) +
+    geom_point(size = 2, alpha = 0.5) +
+    scale_x_continuous(breaks = 
+                         seq(min(med_childcare_cost_by_setting$study_year),
+                        max(med_childcare_cost_by_setting$study_year), by = 1)) +
+    labs(title = "Median Full-Time Weekly Childcare Costs in CA by Setting",
+         x = "Study Year",
+         y = "Median Weekly Cost ($)",
+         color = "Setting") +
+    theme_bw()
 ```
 
 ## Data Simulation & Statisical Models
 
 **DSSM-1: I can simulate data from a *variety* of probability models.**
 
--   Example 1
+-   Example 1: Lab 2 Question 17
 
 ```{r}
 #| label: dsm-1-1
+species_mod <- aov(weight ~ species, data = surveys)
 
+summary(species_mod)
 ```
 
--   Example 2
+-   Example 2: Lab 3 Question 3
 
 ```{r}
 #| label: dsm-1-2
-
+chisq.test(table(teacher_evals_compare$sen_level, teacher_evals_compare$SET_level))
 ```
 
 **DSSM-2: I can conduct common statistical analyses in R.**
