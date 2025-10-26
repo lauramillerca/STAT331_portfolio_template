@@ -61,11 +61,16 @@ teacher_evals_clean <- teacher_evals |>
 
 ```
 
--   Example selecting columns based on logical values (e.g., `starts_with()`, `ends_with()`, `contains()`, `where()`)
+-   Example selecting columns based on logical values (e.g., `starts_with()`, `ends_with()`, `contains()`, `where()`): Lab 3 Question 1
 
 ```{r}
 #| label: wd-2-ex-3
-
+teacher_evals_compare <- teacher_evals |>
+  filter(question_no == 903) |>
+  mutate(SET_level = if_else(SET_score_avg >= 4, "excellent", "standard"),
+         sen_level = case_when(seniority <= 4 ~ "junior",
+                               seniority > 4 ~ "senior")) |>
+  select(course_id, SET_level, sen_level)
 ```
 
 **WD-3: I can filter rows from a dataframe for a *variety* of data types (e.g., numeric, integer, character, factor, date).**
@@ -132,46 +137,100 @@ suspect_check_in
 
 **WD-4: I can modify existing variables and create new variables in a dataframe for a *variety* of data types (e.g., numeric, integer, character, factor, date).**
 
--   Numeric Example 1
+-   Numeric Example 1: Lab 5
 
 ```{r}
 #| label: wd-4-numeric-ex-1
-
+suspect_check_in <- get_fit_now_check_in |>
+  inner_join(get_fit_now_member, by = c("membership_id" = "id")) |>
+  mutate(membership_id = as.character(membership_id),
+         check_in_date = ymd(as.character(check_in_date))) |>
+  filter(check_in_date == as.Date("2018-01-09"), 
+         str_detect(membership_id, "^48Z"))
+suspect_check_in
 ```
 
--   Numeric Example 2
+-   Numeric Example 2: Lab 3 Question 1
 
 ```{r}
 #| label: wd-4-numeric-ex-2
-
+teacher_evals_compare <- teacher_evals |>
+  filter(question_no == 903) |>
+  mutate(SET_level = if_else(SET_score_avg >= 4, "excellent", "standard"),
+         sen_level = case_when(seniority <= 4 ~ "junior",
+                               seniority > 4 ~ "senior")) |>
+  select(course_id, SET_level, sen_level)
 ```
 
--   Factor Example 1 (renaming levels)
+-   Factor Example 1 (renaming levels): Lab 4 Question 7
 
 ```{r}
 #| label: wd-4-factor-ex-1
-
+ca_childcare_long <- ca_childcare |>
+  select(census_region, county_name, study_year, mc_infant, mc_toddler, mc_preschool) |>
+  mutate(study_year = as.numeric(study_year)) |>
+  pivot_longer(cols = c(mc_infant, mc_toddler, mc_preschool),
+               names_to = "age_group",
+               values_to = "median_weekly_cost") |>
+  mutate(age_group = recode(age_group,
+                            mc_infant = "Infant",
+                            mc_toddler = "Toddler",
+                            mc_preschool = "Preschool"),
+         age_group = factor(age_group, levels = c("Infant", "Toddler", "Preschool"))) |>
+  group_by(age_group, census_region) |>
+  mutate(census_region = fct_reorder(census_region, median_weekly_cost, .fun = max)) |>
+  ungroup()
 ```
 
--   Factor Example 2 (reordering levels)
+-   Factor Example 2 (reordering levels): Lab 4 Question 7
 
 ```{r}
 #| label: wd-4-factor-ex-2
-
+ca_childcare_long <- ca_childcare |>
+  select(census_region, county_name, study_year, mc_infant, mc_toddler, mc_preschool) |>
+  mutate(study_year = as.numeric(study_year)) |>
+  pivot_longer(cols = c(mc_infant, mc_toddler, mc_preschool),
+               names_to = "age_group",
+               values_to = "median_weekly_cost") |>
+  mutate(age_group = recode(age_group,
+                            mc_infant = "Infant",
+                            mc_toddler = "Toddler",
+                            mc_preschool = "Preschool"),
+         age_group = factor(age_group, levels = c("Infant", "Toddler", "Preschool"))) |>
+  group_by(age_group, census_region) |>
+  mutate(census_region = fct_reorder(census_region, median_weekly_cost, .fun = max)) |>
+  ungroup()
 ```
 
--   Character (example must use functions from **stringr**)
+-   Character (example must use functions from **stringr**): Lab 4 Question 4
 
 ```{r}
 #| label: wd-4-string
-
+ca_childcare <- ca_childcare |> 
+  mutate(county_name = str_remove(county_name, " County"),
+    census_region = fct_collapse(county_name, "Superior California" = superior_counties, 
+                                  "North Coast" = north_coast_counties,
+                                  "San Francisco Bay Area" = san_fran_counties,
+                                  "Northern San Joaquin Valley" = n_san_joaquin_counties,
+                                  "Central Coast" = central_coast_counties,
+                                  "Southern San Joaquin Valley" = s_san_joaquin_counties,
+                                  "Inland Empire" = inland_counties,
+                                  "Los Angeles" = la_county,
+                                  "Orange County" = orange_county,
+                                  "San Diego - Imperial" = san_diego_imperial_counties))
 ```
 
--   Date (example must use functions from **lubridate**)
+-   Date (example must use functions from **lubridate**): Lab 5
 
 ```{r}
 #| label: wd-4-date
-
+suspect_check_in <- get_fit_now_check_in |>
+  inner_join(get_fit_now_member, by = c("membership_id" = "id")) |>
+  mutate(membership_id = as.character(membership_id),
+         check_in_date = ymd(as.character(check_in_date))) |>
+  filter(check_in_date == as.Date("2018-01-09"), 
+         str_detect(membership_id, "^48Z"))
+suspect_check_in
 ```
 
 **WD-5: I can use mutating joins to combine multiple dataframes.**
