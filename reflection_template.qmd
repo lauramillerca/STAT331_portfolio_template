@@ -235,11 +235,17 @@ suspect_check_in
 
 **WD-5: I can use mutating joins to combine multiple dataframes.**
 
--   `left_join()` Example 1
+-   `left_join()` Example 1: Lab 4 Question 2
 
 ```{r}
 #| label: wd-5-left-ex-1
+ca_childcare <- childcare_costs |>
+  left_join(x = childcare_costs,
+            y = counties,
+            by = join_by(county_fips_code == county_fips_code)) |>
+  filter(state_abbreviation == "CA") 
 
+ca_childcare
 ```
 
 -   `right_join()` Example 1
@@ -249,25 +255,47 @@ suspect_check_in
 
 ```
 
--   `left_join()` **or** `right_join()` Example 2
+-   `left_join()` **or** `right_join()` Example 2: Lab 4 Question 3
 
 ```{r}
 #| label: wd-5-left-right-ex-2
+ca_childcare <- ca_childcare |>
+  left_join(x = ca_childcare,
+            y = tax_rev,
+            by = join_by(county_name == entity_name,
+                         study_year == year))
 
+ca_childcare
 ```
 
--   `inner_join()` Example 1
+-   `inner_join()` Example 1: Lab 5
 
 ```{r}
 #| label: wd-5-inner-ex-1
-
+suspect_check_in <- get_fit_now_check_in |>
+  inner_join(get_fit_now_member, by = c("membership_id" = "id")) |>
+  mutate(membership_id = as.character(membership_id),
+         check_in_date = ymd(as.character(check_in_date))) |>
+  filter(check_in_date == as.Date("2018-01-09"), 
+         str_detect(membership_id, "^48Z"))
+suspect_check_in
 ```
 
--   `inner_join()` Example 2
+-   `inner_join()` Example 2: Lab 5
 
 ```{r}
 #| label: wd-5-inner-ex-2
+suspect <- get_fit_now_check_in |>
+  inner_join(get_fit_now_member, by = c("membership_id" = "id")) |>
+  mutate(check_in_date = ymd(check_in_date)) |>
+  filter(check_in_date == as.Date("2018-01-09"),
+         str_detect(membership_id, "^48Z")) |>
+  inner_join(person, by = c("person_id" = "id"))
 
+suspect <- suspect |>
+  inner_join(drivers_license, by = c("license_id" = "id")) |>
+  filter(str_detect(plate_number, "H42W"))
+suspect
 ```
 
 **WD-6: I can use filtering joins to filter rows from a dataframe.**
@@ -288,18 +316,44 @@ suspect_check_in
 
 **WD-7: I can pivot dataframes from long to wide and visa versa**
 
--   `pivot_longer()`
+-   `pivot_longer()` : Challenge 4 Summary Statistics
 
 ```{r}
 #| label: wd-7-long
+med_childcare_cost_by_setting <- ca_childcare |>
+  select(study_year, mcsa, mfccsa) |>
+  pivot_longer(cols = c(mcsa, mfccsa),
+               names_to = "setting",
+               values_to = "cost") |>
+  group_by(setting, study_year) |>
+  summarise(median_cost = median(cost, na.rm = TRUE),
+            .groups = "drop") |>
+  pivot_wider(names_from = study_year,
+              values_from = median_cost,
+              names_prefix = "year_") |>
+  arrange(setting, desc(year_2018))
 
+med_childcare_cost_by_setting
 ```
 
--   `pivot_wider()`
+-   `pivot_wider()` : Challenge 4 Summary Statistics
 
 ```{r}
 #| label: wd-7-wide
+med_childcare_cost_by_setting <- ca_childcare |>
+  select(study_year, mcsa, mfccsa) |>
+  pivot_longer(cols = c(mcsa, mfccsa),
+               names_to = "setting",
+               values_to = "cost") |>
+  group_by(setting, study_year) |>
+  summarise(median_cost = median(cost, na.rm = TRUE),
+            .groups = "drop") |>
+  pivot_wider(names_from = study_year,
+              values_from = median_cost,
+              names_prefix = "year_") |>
+  arrange(setting, desc(year_2018))
 
+med_childcare_cost_by_setting
 ```
 
 ## Reproducibility
@@ -308,26 +362,43 @@ suspect_check_in
 
 The following assignments satisfy the above criteria:
 
--   Example 1
--   Example 2
--   Example 3
--   Example 4
--   Example 5
+-   Lab 1
+-   Lab 2
+-   Lab 3
+-   Lab 4
+-   Challenge 4
 
 **R-2: I can write well documented and tidy code.**
 
--   Example of **ggplot2** plotting
+-   Example of **ggplot2** plotting: Lab 1 Question 6
 
 ```{r}
 #| label: r-2-1
+library(tidyverse)
 
+ggplot(data = ToothGrowth, 
+       mapping = aes(x = supp, y = len)) +
+  geom_boxplot() +
+  labs(x = "Supplement", y = "Length of Teeth (mm)")
+ToothGrowth %>% 
+  mutate(dose = as.factor(dose)) %>% 
+  ggplot(mapping = aes(x = dose, y = len)) +
+  geom_boxplot() +
+  labs(x = "Dose of Supplement (mg/day)", y = "Length of Teeth (mm)")
 ```
 
--   Example of **dplyr** pipeline
+-   Example of **dplyr** pipeline: Lab 3 Question 1
 
 ```{r}
 #| label: r-2-2
+teacher_evals_compare <- teacher_evals |>
+  filter(question_no == 903) |>
+  mutate(SET_level = if_else(SET_score_avg >= 4, "excellent", "standard"),
+         sen_level = case_when(seniority <= 4 ~ "junior",
+                               seniority > 4 ~ "senior")) |>
+  select(course_id, SET_level, sen_level)
 
+teacher_evals_compare
 ```
 
 -   Example of function formatting
