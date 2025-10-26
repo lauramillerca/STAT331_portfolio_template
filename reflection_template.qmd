@@ -428,85 +428,231 @@ teacher_evals_compare
 
 **DVS-1: I can create visualizations for a *variety* of variable types (e.g., numeric, character, factor, date)**
 
--   At least two numeric variables
+-   At least two numeric variables: Lab 4 Question 8
 
 ```{r}
 #| label: dvs-1-num
-
+ggplot(ca_childcare, aes(x = mhi_2018, y = mc_infant)) +
+  geom_point(alpha = 0.5, color = "blue") +
+  geom_smooth(method = "lm", se = TRUE, color = "red", size = 1) +
+  labs(x = "Median Household Income 2018 ($)",
+       y = "Median Weekly Cost for Infant Center-Based Childcare ($)",
+       title = "Relationship Between Household Income and Infant Childcare Costs in CA",
+       color = "Region") +
+  theme_bw() +
+  theme(axis.title.y = element_text(size = 8),
+        plot.title = element_text(size = 10, face = "bold"))
 ```
 
--   At least one numeric variable and one categorical variable
+-   At least one numeric variable and one categorical variable: Lab 2 Question 16
 
 ```{r}
 #| label: dvs-2-num-cat
-
+ggplot(data = surveys, mapping = aes(x = weight, y = species)) +
+  geom_boxplot(outlier.shape = NA) +
+  labs(x = "Weight (g)", y = "Species", title = "Distribution of Species by Weight") +
+  geom_jitter(color = "steelblue", alpha = 0.3)
 ```
 
--   At least two categorical variables
+-   At least two categorical variables: Challenge 2
 
 ```{r}
 #| label: dvs-2-cat
-
+ggplot(data = surveys, mapping = aes(x = species, y = weight, color = sex)) +
+  geom_jitter(color = "green", alpha = 0.02) +
+  geom_boxplot(outlier.shape = NA) +
+  labs(x = "Species", y = "Weight (g)", title = "Distribution of Weight by Species") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_color_manual(values = c("pink", "blue"))
 ```
 
--   Dates (time series plot)
+-   Dates (time series plot): Challenge 4 Plot
 
 ```{r}
 #| label: dvs-2-date
+med_childcare_cost_by_setting <- ca_childcare |>
+  mutate(study_year = as.integer(study_year)) |>
+  select(study_year, mcsa, mfccsa) |>
+  pivot_longer(cols = c(mcsa, mfccsa),
+               names_to = "setting",
+               values_to = "cost") |>
+  group_by(setting, study_year) |>
+  summarise(median_cost = median(cost, na.rm = TRUE),
+            .groups = "drop")
 
+ggplot(med_childcare_cost_by_setting, aes(x = study_year,
+                                          y = median_cost,
+                                          color = setting)) +
+    geom_line(size = 1) +
+    geom_point(size = 2, alpha = 0.5) +
+    scale_x_continuous(breaks = 
+                         seq(min(med_childcare_cost_by_setting$study_year),
+                        max(med_childcare_cost_by_setting$study_year), by = 1)) +
+    labs(title = "Median Full-Time Weekly Childcare Costs in CA by Setting",
+         x = "Study Year",
+         y = "Median Weekly Cost ($)",
+         color = "Setting") +
+    theme_bw()
 ```
 
 **DVS-2: I use plot modifications to make my visualization clear to the reader.**
 
--   I can modify my plot theme to be more readable
+-   I can modify my plot theme to be more readable: Lab 4 Question 8
 
 ```{r}
 #| label: dvs-2-ex-1
-
+ggplot(ca_childcare, aes(x = mhi_2018, y = mc_infant)) +
+  geom_point(alpha = 0.5, color = "blue") +
+  geom_smooth(method = "lm", se = TRUE, color = "red", size = 1) +
+  labs(x = "Median Household Income 2018 ($)",
+       y = "Median Weekly Cost for Infant Center-Based Childcare ($)",
+       title = "Relationship Between Household Income and Infant Childcare Costs in CA",
+       color = "Region") +
+  theme_bw() +
+  theme(axis.title.y = element_text(size = 8),
+        plot.title = element_text(size = 10, face = "bold"))
 ```
 
--   I can modify my colors to be accessible to anyone's eyes
+-   I can modify my colors to be accessible to anyone's eyes: Challenge 3 Question 2
 
 ```{r}
 #| label: dvs-2-ex-2
-
+ggplot(teacher_evals_compare, aes(x = sen_level, fill = SET_level)) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_manual(values = c("excellent" = "purple", "standard" = "orange")) +
+  labs(x = "Years of Experience",
+       y = "",
+       title = "Evaluation of Teachers' Use of Activities",
+       fill = "Evaluation Rating")
 ```
 
--   I can modify my plot titles to clearly communicate the data context
+-   I can modify my plot titles to clearly communicate the data context: Challenge 2
 
 ```{r}
 #| label: dvs-2-ex-3
-
+ggplot(data = surveys, mapping = aes(x = species, y = weight, color = sex)) +
+  geom_jitter(color = "green", alpha = 0.02) +
+  geom_boxplot(outlier.shape = NA) +
+  labs(x = "Species", y = "Weight (g)", title = "Distribution of Weight by Species") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_color_manual(values = c("pink", "blue"))
 ```
 
--   I can modify the text in my plot to be more readable
+-   I can modify the text in my plot to be more readable: Lab 4 Question 7
 
 ```{r}
 #| label: dvs-2-ex-4
+ca_childcare_long <- ca_childcare |>
+  select(census_region, county_name, study_year, mc_infant, mc_toddler, mc_preschool) |>
+  mutate(study_year = as.numeric(study_year)) |>
+  pivot_longer(cols = c(mc_infant, mc_toddler, mc_preschool),
+               names_to = "age_group",
+               values_to = "median_weekly_cost") |>
+  mutate(age_group = recode(age_group,
+                            mc_infant = "Infant",
+                            mc_toddler = "Toddler",
+                            mc_preschool = "Preschool"),
+         age_group = factor(age_group, levels = c("Infant", "Toddler", "Preschool"))) |>
+  group_by(age_group, census_region) |>
+  mutate(census_region = fct_reorder(census_region, median_weekly_cost, .fun = max)) |>
+  ungroup()
+        
 
+ggplot(ca_childcare_long, aes(x = study_year, 
+                              y = median_weekly_cost,
+                              color = census_region,
+                              group = interaction(census_region, county_name))) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(aes(group = census_region), 
+              method = "loess", 
+              se = FALSE, 
+              linewidth = 1) +
+  facet_wrap(~ age_group, ncol = 3, scales = "fixed") +
+  labs(x = "Study Year",
+       y = "",
+       title = "Weekly Median Price for Center-Based Childcare ($)",
+       color = "California Region") +
+  theme_bw(base_size = 10) +
+  scale_y_continuous(limits = c(100, 500)) +
+  scale_x_continuous(limits = c(2008, 2018),
+                     breaks = seq(2008, 2018, by = 2)) +
+  theme(axis.text.x = element_text(size = 6),
+        strip.text = element_text(size = 10),
+        legend.text = element_text(size = 9),
+        legend.title = element_text(size = 10),
+        panel.spacing = unit(0.5, "cm"))
 ```
 
--   I can reorder my legend to align with the colors in my plot
+-   I can reorder my legend to align with the colors in my plot: Lab 4 Question 7
 
 ```{r}
 #| label: dvs-2-ex-5
+ca_childcare_long <- ca_childcare |>
+  select(census_region, county_name, study_year, mc_infant, mc_toddler, mc_preschool) |>
+  mutate(study_year = as.numeric(study_year)) |>
+  pivot_longer(cols = c(mc_infant, mc_toddler, mc_preschool),
+               names_to = "age_group",
+               values_to = "median_weekly_cost") |>
+  mutate(age_group = recode(age_group,
+                            mc_infant = "Infant",
+                            mc_toddler = "Toddler",
+                            mc_preschool = "Preschool"),
+         age_group = factor(age_group, levels = c("Infant", "Toddler", "Preschool"))) |>
+  group_by(age_group, census_region) |>
+  mutate(census_region = fct_reorder(census_region, median_weekly_cost, .fun = max)) |>
+  ungroup()
+        
 
+ggplot(ca_childcare_long, aes(x = study_year, 
+                              y = median_weekly_cost,
+                              color = census_region,
+                              group = interaction(census_region, county_name))) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(aes(group = census_region), 
+              method = "loess", 
+              se = FALSE, 
+              linewidth = 1) +
+  facet_wrap(~ age_group, ncol = 3, scales = "fixed") +
+  labs(x = "Study Year",
+       y = "",
+       title = "Weekly Median Price for Center-Based Childcare ($)",
+       color = "California Region") +
+  theme_bw(base_size = 10) +
+  scale_y_continuous(limits = c(100, 500)) +
+  scale_x_continuous(limits = c(2008, 2018),
+                     breaks = seq(2008, 2018, by = 2)) +
+  theme(axis.text.x = element_text(size = 6),
+        strip.text = element_text(size = 10),
+        legend.text = element_text(size = 9),
+        legend.title = element_text(size = 10),
+        panel.spacing = unit(0.5, "cm"))
 ```
 
 **DVS-3: I show creativity in my visualizations**
 
--   I can use non-standard colors (Example 1)
+-   I can use non-standard colors (Example 1): Challenge 2
 
 ```{r}
 #| label: dvs-3-1-ex-1
-
+ggplot(data = surveys, mapping = aes(x = species, y = weight, color = sex)) +
+  geom_jitter(color = "green", alpha = 0.02) +
+  geom_boxplot(outlier.shape = NA) +
+  labs(x = "Species", y = "Weight (g)", title = "Distribution of Weight by Species") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_color_manual(values = c("pink", "blue"))
 ```
 
--   I can use non-standard colors (Example 2)
+-   I can use non-standard colors (Example 2): Challenge 2
 
 ```{r}
 #| label: dvs-3-1-ex-2
-
+ggplot(data = surveys, mapping = aes(x = weight, y = species)) +
+  geom_jitter(color = "steelblue", alpha = 0.1) +
+  geom_boxplot(outlier.shape = NA) +
+  labs(x = "Weight (g)", y = "Species", title = "Weight Distribution by Species") +
+  theme(panel.grid.minor = element_blank()) +
+  theme(axis.title.y = element_text(margin = margin(r = 10)))
 ```
 
 -   I can use annotations (e.g., `geom_text()`)
@@ -525,14 +671,16 @@ teacher_evals_compare
 
 **DVS-4: I can calculate numerical summaries of variables.**
 
--   Example using `summarize()`
+-   Example using `summarize()` : Lab 3 Question 6
 
 ```{r}
 #| label: dvs-4-summarize
-
+teacher_evals_clean |>
+  summarise(unique_instructors = n_distinct(teacher_id),
+            unique_courses = n_distinct(course_id))
 ```
 
--   Example using `across()`
+-   Example using `across()` :
 
 ```{r}
 #| label: dvs-4-across
@@ -541,27 +689,43 @@ teacher_evals_compare
 
 **DVS-5: I can find summaries of variables across multiple groups.**
 
--   Example 1
+-   Example 1: Lab 3 Question 11
 
 ```{r}
 #| label: dvs-5-1
-
+failing_courses <- teacher_evals_clean |>
+  filter(seniority == 1) |>
+  group_by(teacher_id) |>
+  summarise(n_courses = n_distinct(course_id),
+            avg_pct_fail = mean(percent_failed_cur, na.rm = TRUE),
+            .groups = "drop")
 ```
 
--   Example 2
+-   Example 2: Lab 3 Question 9
 
 ```{r}
 #| label: dvs-5-2
-
+teacher_evals_clean |>
+  group_by(course_id, teacher_id) |>
+  summarise(n_questions = n_distinct(question_no), groups = "drop") |>
+  filter(n_questions == 9) |>
+  select(course_id, teacher_id)
 ```
 
 **DVS-6: I can create tables which make my summaries clear to the reader.**
 
--   I can modify my column names to clearly communicate the data context
+-   I can modify my column names to clearly communicate the data context: Challenge 3 Question 1
 
 ```{r}
 #| label: dvs-6-ex-1
+teacher_evals_compare <- teacher_evals |>
+  filter(question_no == 903) |>
+  mutate(SET_level = if_else(SET_score_avg >= 4, "excellent", "standard"),
+         sen_level = case_when(seniority <= 4 ~ "junior",
+                               seniority > 4 ~ "senior")) |>
+  select(course_id, SET_level, sen_level)
 
+teacher_evals_compare
 ```
 
 -   I can modify the text in my table to be more readable (e.g., bold face for column headers)
@@ -571,11 +735,18 @@ teacher_evals_compare
 
 ```
 
--   I can arrange my table to have an intuitive ordering
+-   I can arrange my table to have an intuitive ordering: Lab 4 Question 6
 
 ```{r}
 #| label: dvs-6-ex-3
+infant_cost_2018 <- ca_childcare |>
+  filter(study_year == 2018) |>
+  group_by(census_region) |>
+  summarize(med_mc_infant = median(mc_infant, na.rm = TRUE),
+            .groups = "drop") |>
+  arrange(desc(med_mc_infant))
 
+infant_cost_2018
 ```
 
 **DVS-7: I show creativity in my tables.**
@@ -587,7 +758,7 @@ teacher_evals_compare
 
 ```
 
--   I can modify the layout of my table to be more readable (e.g., `pivot_longer()` or `pivot_wider()`)
+-   I can modify the layout of my table to be more readable (e.g., `pivot_longer()` or `pivot_wider()`) :
 
 ```{r}
 #| label: dvs-7-ex-2
