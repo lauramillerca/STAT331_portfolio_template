@@ -728,11 +728,16 @@ teacher_evals_compare <- teacher_evals |>
 teacher_evals_compare
 ```
 
--   I can modify the text in my table to be more readable (e.g., bold face for column headers)
+-   I can modify the text in my table to be more readable (e.g., bold face for column headers): Challenge 2 Spicy
 
 ```{r}
 #| label: dvs-6-ex-2
-
+ggplot(data = surveys, mapping = aes(x = weight, y = species)) +
+  geom_jitter(color = "steelblue", alpha = 0.1) +
+  geom_boxplot(outlier.shape = NA) +
+  labs(x = "Weight (g)", y = "Species", title = "Weight Distribution by Species") +
+  theme(panel.grid.minor = element_blank()) +
+  theme(axis.title.y = element_text(margin = margin(r = 10)))
 ```
 
 -   I can arrange my table to have an intuitive ordering: Lab 4 Question 6
@@ -914,11 +919,15 @@ ggplot(med_childcare_cost_by_setting, aes(x = study_year,
 
 **PE-4: I can use modern tools when carrying out my analysis.**
 
--   I can use functions which are not superseded or deprecated
+-   I can use functions which are not superseded or deprecated: Lab 3 Question 9
 
 ```{r}
 #| label: pe-4-1
-
+teacher_evals_clean |>
+  group_by(course_id, teacher_id) |>
+  summarise(n_questions = n_distinct(question_no), groups = "drop") |>
+  filter(n_questions == 9) |>
+  select(course_id, teacher_id)
 ```
 
 -   I can connect a data wrangling pipeline into a `ggplot()` : Challenge 4
@@ -1007,14 +1016,24 @@ summary(reg_mod1)
 
 <!-- How did you revise your thinking throughout the course? How did you revise your thinking on the code examples you have provided in your portfolio? -->
 
+I revised my thinking in several ways throughout the course. I learned about programming efficiency, and how to write code that doesn't repeat the same function call multiple times. I also learned how to minimize the amount of objects saved in my code. Additionally, I learned how to reformat tables and graphs by altering text type, size, color, ordering, and placement. I learned how to use the here() package to import data, and I learned how to use Quarto formatting options to surpress messages from loading in packages, etc.
+
 <!-- For the revisions included in your Portfolio, to help me understand the nature of your revisions, please denote somehow the feedback I provided you (e.g., boldface, italics, colored text) before your revisions. -->
 
 ## Extending My Thinking
 
 <!-- How did you extended your thinking throughout the course? How did you extend your thinking on the code examples you have provided in your portfolio? -->
 
+I extended my thinking in multiple ways throughout the course. As I learned how to alter the text in my tables and graphs, I used that knowledge to create good-looking data outputs that are readable to a viewer. I additionally used my knowledge of working with data sets to make my legends correspond to ordering on my graphs. I used plot modifications to make visualizations clearer to the reader, and I used colors to show creativity in my visualizations.
+
 ## Peer Support & Collaboration
 
 <!-- Include an image or a description of feedback you gave that you are proud of (either in a peer review or in Discord). -->
 
+This is feedback I am proud of giving for a peer review:
+
+"Overall, the code written was very organized and efficient. I especially liked the colors in the second graph. For consistency, axis labels should use either (g) or (grams). Additionally, a lower alpha level may be useful so that the box plots are more visible."
+
 <!-- Include a description of how you grew as a collaborator through the weekly pair programming activities.   -->
+
+I grew as a collaborator through the weekly pair programming activities. It was helpful to bounce ideas back and forth with a partner as we tackled various problems, allowing us to see the concept from another person's point of view and see how they would tackle it in comparison to how I would typically start the problem. This allowed me to understand various concepts and functions more deeply, as I would discuss their use and application with my partner as we debated which operation or function would work best for what we are trying to do.
