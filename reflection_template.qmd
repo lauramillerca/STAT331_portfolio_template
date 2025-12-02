@@ -32,11 +32,18 @@ surveys <- read_csv(file = here("Week 2", "surveys.csv"))
 teacher_evals <- read_csv(file = here("Week 3", "teacher_evals.csv"))
 ```
 
--   `xlsx`
+-   `xlsx` : PA 4 Question 1
 
 ```{r}
 #| label: wd-1-xlsx
-
+library(tidyverse)
+library(readxl)
+military <- read_xlsx("gov_spending_per_capita.xlsx",
+                      sheet = "Share of Govt. spending",
+                      skip  = 7,
+                      n_max = 190,
+                      na = c(". .", "xxx", "..")
+                      )
 ```
 
 **WD-2: I can select necessary columns from a dataset.**
@@ -54,23 +61,29 @@ teacher_evals_clean <- teacher_evals |>
          SET_score_avg, percent_failed_cur, academic_degree, seniority, sex)
 ```
 
--   Example removing specified columns
+-   Example removing specified columns: Lab 3 Question 5 – revised to change from selecting the columns I wanted to removing the columns I don't want.
 
 ```{r}
 #| label: wd-2-ex-2
-
+teacher_evals_clean <- teacher_evals |>
+  rename(sex = gender) |>
+  filter(no_participants >= 10) |>
+  mutate(teacher_id = as.character(teacher_id),
+         course_id = as.character(course_id)) |>
+  select(-c(stud_grade_avg, stud_grade_std, stud_grade_var_coef, percent_failed,
+            stud_grade_avg_cur, stud_grade_std_cur, stud_grade_var_coef_cur,
+            class_duration, weekday, time_of_day, SET_score_1sem, maximum_score))
 ```
 
--   Example selecting columns based on logical values (e.g., `starts_with()`, `ends_with()`, `contains()`, `where()`): Lab 3 Question 1
+-   Example selecting columns based on logical values (e.g., `starts_with()`, `ends_with()`, `contains()`, `where()`): Lab 3 Question 9 – revised to change from selecting individual columns to selecting columns based on logical values
 
 ```{r}
 #| label: wd-2-ex-3
-teacher_evals_compare <- teacher_evals |>
-  filter(question_no == 903) |>
-  mutate(SET_level = if_else(SET_score_avg >= 4, "excellent", "standard"),
-         sen_level = case_when(seniority <= 4 ~ "junior",
-                               seniority > 4 ~ "senior")) |>
-  select(course_id, SET_level, sen_level)
+teacher_evals_clean |>
+  group_by(course_id, teacher_id) |>
+  summarise(n_questions = n_distinct(question_no), groups = "drop") |>
+  filter(n_questions == 9) |>
+  select(ends_with("_id"))
 ```
 
 **WD-3: I can filter rows from a dataframe for a *variety* of data types (e.g., numeric, integer, character, factor, date).**
@@ -110,19 +123,24 @@ ca_childcare <- childcare_costs |>
   filter(state_abbreviation == "CA") 
 ```
 
--   Character Example 2 (example must use functions from **stringr**): Lab 3 Question 12
+-   Character Example 2 (example must use functions from **stringr**): Lab 5 – revised to change as.Date to ymd
 
 ```{r}
 #| label: wd-3-string
-resp_avg <- teacher_evals_clean |>
-  filter(academic_degree %in% c("dr", "prof")) |>
-  group_by(teacher_id, seniority, sex) |>
-  summarise(n_courses = n_distinct(course_id),
-            avg_resp = mean(resp_share, na.rm = TRUE),
-            .groups = "drop")
+suspect <- get_fit_now_check_in |>
+  inner_join(get_fit_now_member, by = c("membership_id" = "id")) |>
+  mutate(check_in_date = ymd(check_in_date)) |>
+  filter(check_in_date == ymd("2018-01-09"),
+         str_detect(membership_id, "^48Z")) |>
+  inner_join(person, by = c("person_id" = "id"))
+
+suspect <- suspect |>
+  inner_join(drivers_license, by = c("license_id" = "id")) |>
+  filter(str_detect(plate_number, "H42W"))
+suspect
 ```
 
--   Date (example must use functions from **lubridate**): Lab 5
+-   Date (example must use functions from **lubridate**): Lab 5 – revised to change as.Date to ymd
 
 ```{r}
 #| label: wd-3-date
@@ -130,7 +148,7 @@ suspect_check_in <- get_fit_now_check_in |>
   inner_join(get_fit_now_member, by = c("membership_id" = "id")) |>
   mutate(membership_id = as.character(membership_id),
          check_in_date = ymd(as.character(check_in_date))) |>
-  filter(check_in_date == as.Date("2018-01-09"), 
+  filter(check_in_date == ymd("2018-01-09"), 
          str_detect(membership_id, "^48Z"))
 suspect_check_in
 ```
@@ -162,24 +180,22 @@ teacher_evals_compare <- teacher_evals |>
   select(course_id, SET_level, sen_level)
 ```
 
--   Factor Example 1 (renaming levels): Lab 4 Question 7
+-   Factor Example 1 (renaming levels): Lab 4 Question 4
 
 ```{r}
 #| label: wd-4-factor-ex-1
-ca_childcare_long <- ca_childcare |>
-  select(census_region, county_name, study_year, mc_infant, mc_toddler, mc_preschool) |>
-  mutate(study_year = as.numeric(study_year)) |>
-  pivot_longer(cols = c(mc_infant, mc_toddler, mc_preschool),
-               names_to = "age_group",
-               values_to = "median_weekly_cost") |>
-  mutate(age_group = recode(age_group,
-                            mc_infant = "Infant",
-                            mc_toddler = "Toddler",
-                            mc_preschool = "Preschool"),
-         age_group = factor(age_group, levels = c("Infant", "Toddler", "Preschool"))) |>
-  group_by(age_group, census_region) |>
-  mutate(census_region = fct_reorder(census_region, median_weekly_cost, .fun = max)) |>
-  ungroup()
+ca_childcare <- ca_childcare |> 
+  mutate(county_name = str_remove(county_name, " County"),
+    census_region = fct_collapse(county_name, "Superior California" = superior_counties, 
+                                  "North Coast" = north_coast_counties,
+                                  "San Francisco Bay Area" = san_fran_counties,
+                                  "Northern San Joaquin Valley" = n_san_joaquin_counties,
+                                  "Central Coast" = central_coast_counties,
+                                  "Southern San Joaquin Valley" = s_san_joaquin_counties,
+                                  "Inland Empire" = inland_counties,
+                                  "Los Angeles" = la_county,
+                                  "Orange County" = orange_county,
+                                  "San Diego - Imperial" = san_diego_imperial_counties))
 ```
 
 -   Factor Example 2 (reordering levels): Lab 4 Question 7
@@ -202,22 +218,34 @@ ca_childcare_long <- ca_childcare |>
   ungroup()
 ```
 
--   Character (example must use functions from **stringr**): Lab 4 Question 4
+-   Character (example must use functions from **stringr**): Lab 8 Question 3
 
 ```{r}
 #| label: wd-4-string
-ca_childcare <- ca_childcare |> 
-  mutate(county_name = str_remove(county_name, " County"),
-    census_region = fct_collapse(county_name, "Superior California" = superior_counties, 
-                                  "North Coast" = north_coast_counties,
-                                  "San Francisco Bay Area" = san_fran_counties,
-                                  "Northern San Joaquin Valley" = n_san_joaquin_counties,
-                                  "Central Coast" = central_coast_counties,
-                                  "Southern San Joaquin Valley" = s_san_joaquin_counties,
-                                  "Inland Empire" = inland_counties,
-                                  "Los Angeles" = la_county,
-                                  "Orange County" = orange_county,
-                                  "San Diego - Imperial" = san_diego_imperial_counties))
+plot_vars <- function(df, x_var, y_var, color_var = y_var) {
+
+  x_label <- as_label(enquo(x_var)) |>
+    str_replace_all("_", " ") |>
+    str_to_title()
+  
+  y_label <- as_label(enquo(y_var)) |>
+    str_replace_all("_", " ") |>
+    str_to_title()
+  
+  color_label <- as_label(enquo(color_var)) |>
+    str_replace_all("_", " ") |>
+    str_to_title()
+  
+  plot_title <- str_glue("Scatterplot of {y_label} vs {x_label}")
+
+  ggplot(df, aes(x = {{ x_var }}, y = {{ y_var }}, color = {{ color_var }})) +
+    geom_point(alpha = 0.5, size = 3) +
+    labs(x = x_label,
+         y = y_label,
+         color = color_label,
+         title = plot_title) +
+    theme_minimal()
+}
 ```
 
 -   Date (example must use functions from **lubridate**): Lab 5
