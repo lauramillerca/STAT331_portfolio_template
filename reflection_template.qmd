@@ -263,33 +263,37 @@ suspect_check_in
 
 **WD-5: I can use mutating joins to combine multiple dataframes.**
 
--   `left_join()` Example 1: Lab 4 Question 2
+-   `left_join()` Example 1: Lab 4 Question 2 – revised to remove redundant x assignment in left_join()
 
 ```{r}
 #| label: wd-5-left-ex-1
 ca_childcare <- childcare_costs |>
-  left_join(x = childcare_costs,
-            y = counties,
+  left_join(y = counties,
             by = join_by(county_fips_code == county_fips_code)) |>
   filter(state_abbreviation == "CA") 
 
 ca_childcare
 ```
 
--   `right_join()` Example 1
+-   `right_join()` Example 1: Lab 5 – revised to change inner_join() to right_join()
 
 ```{r}
 #| label: wd-5-right
-
+suspect_check_in <- get_fit_now_check_in |>
+  right_join(get_fit_now_check_in, by = c("id" = "membership_id")) |>
+  mutate(membership_id = as.character(id),
+         check_in_date = ymd(as.character(check_in_date))) |>
+  filter(check_in_date == ymd("2018-01-09"), 
+         str_detect(membership_id, "^48Z"))
+suspect_check_in
 ```
 
--   `left_join()` **or** `right_join()` Example 2: Lab 4 Question 3
+-   `left_join()` **or** `right_join()` Example 2: Lab 4 Question 3 – revised to remove redundant x assignment in left_join()
 
 ```{r}
 #| label: wd-5-left-right-ex-2
 ca_childcare <- ca_childcare |>
-  left_join(x = ca_childcare,
-            y = tax_rev,
+  left_join(y = tax_rev,
             by = join_by(county_name == entity_name,
                          study_year == year))
 
@@ -328,18 +332,32 @@ suspect
 
 **WD-6: I can use filtering joins to filter rows from a dataframe.**
 
--   `semi_join()`
+-   `semi_join()` : Lab 5 – revised to change inner_join() to semi_join() and to change as.Date to ymd, semi_join() is appropriate because
 
 ```{r}
 #| label: wd-6-semi
-
+suspect_check_in <- get_fit_now_check_in |>
+  semi_join(get_fit_now_member |>
+              filter(str_detect(id, "^48Z")),
+            by = c("membership_id" = "id")) |>
+  mutate(membership_id = as.character(membership_id),
+         check_in_date = ymd(as.character(check_in_date))) |>
+  filter(check_in_date == ymd("2018-01-09"))
+suspect_check_in
 ```
 
--   `anti_join()`
+-   `anti_join()` : lab 5 – revised to change inner_join() to anti_join() and to change as.Date to ymd, anti_join() is appropriate because
 
 ```{r}
 #| label: wd-6-anti
-
+suspect_check_in <- get_fit_now_check_in |>
+  anti_join(get_fit_now_member |>
+              filter(!str_detect(id, "^48Z")),
+            by = c("membership_id" = "id")) |>
+  mutate(membership_id = as.character(membership_id),
+         check_in_date = ymd(as.character(check_in_date))) |>
+  filter(check_in_date == ymd("2018-01-09"))
+suspect_check_in
 ```
 
 **WD-7: I can pivot dataframes from long to wide and visa versa**
