@@ -140,7 +140,7 @@ suspect <- suspect |>
 suspect
 ```
 
--   Date (example must use functions from **lubridate**): Lab 5 – revised to change as.Date to ymd
+-   Date (example must use functions from **lubridate**): Lab 5 2nd to last step of suspect investigation – revised to change as.Date to ymd
 
 ```{r}
 #| label: wd-3-date
@@ -155,7 +155,7 @@ suspect_check_in
 
 **WD-4: I can modify existing variables and create new variables in a dataframe for a *variety* of data types (e.g., numeric, integer, character, factor, date).**
 
--   Numeric Example 1: Lab 5
+-   Numeric Example 1: Lab 5 2nd to last step of suspect investigation - revised to change as.Date to ymd
 
 ```{r}
 #| label: wd-4-numeric-ex-1
@@ -163,7 +163,7 @@ suspect_check_in <- get_fit_now_check_in |>
   inner_join(get_fit_now_member, by = c("membership_id" = "id")) |>
   mutate(membership_id = as.character(membership_id),
          check_in_date = ymd(as.character(check_in_date))) |>
-  filter(check_in_date == as.Date("2018-01-09"), 
+  filter(check_in_date == ymd("2018-01-09"), 
          str_detect(membership_id, "^48Z"))
 suspect_check_in
 ```
@@ -248,7 +248,7 @@ plot_vars <- function(df, x_var, y_var, color_var = y_var) {
 }
 ```
 
--   Date (example must use functions from **lubridate**): Lab 5
+-   Date (example must use functions from **lubridate**): Lab 5 2nd to last step of suspect investigation - revised to change as.Date to ymd
 
 ```{r}
 #| label: wd-4-date
@@ -256,7 +256,7 @@ suspect_check_in <- get_fit_now_check_in |>
   inner_join(get_fit_now_member, by = c("membership_id" = "id")) |>
   mutate(membership_id = as.character(membership_id),
          check_in_date = ymd(as.character(check_in_date))) |>
-  filter(check_in_date == as.Date("2018-01-09"), 
+  filter(check_in_date == ymd("2018-01-09"), 
          str_detect(membership_id, "^48Z"))
 suspect_check_in
 ```
@@ -275,7 +275,7 @@ ca_childcare <- childcare_costs |>
 ca_childcare
 ```
 
--   `right_join()` Example 1: Lab 5 – revised to change inner_join() to right_join()
+-   `right_join()` Example 1: Lab 5 2nd to last step of suspect investigation – revised to change inner_join() to right_join()
 
 ```{r}
 #| label: wd-5-right
@@ -300,7 +300,7 @@ ca_childcare <- ca_childcare |>
 ca_childcare
 ```
 
--   `inner_join()` Example 1: Lab 5
+-   `inner_join()` Example 1: Lab 5 2nd to last step of suspect investigation
 
 ```{r}
 #| label: wd-5-inner-ex-1
@@ -346,7 +346,7 @@ suspect_check_in <- get_fit_now_check_in |>
 suspect_check_in
 ```
 
--   `anti_join()` : lab 5 – revised to change inner_join() to anti_join() and to change as.Date to ymd, anti_join() is appropriate because I want to keep only rows that do not have matches in y, so I am joining everything that does not not have id starting with "48Z" i.e. everything that has an id starting with "48Z".
+-   `anti_join()` : Lab 5 – revised to change inner_join() to anti_join() and to change as.Date to ymd, anti_join() is appropriate because I want to keep only rows that do not have matches in y, so I am joining everything that does not not have id starting with "48Z" i.e. everything that has an id starting with "48Z".
 
 ```{r}
 #| label: wd-6-anti
@@ -609,14 +609,14 @@ ggplot(missing_summary, aes(x = section,
         axis.text.x = element_text(size = 8))
 ```
 
--   I can modify my plot titles to clearly communicate the data context: Challenge 2 - revised to modify axis labels
+-   I can modify my plot titles to clearly communicate the data context: Challenge 2 Package Specification - revised to modify axis labels and title
 
 ```{r}
 #| label: dvs-2-ex-3
 ggplot(data = surveys, mapping = aes(x = species, y = weight, color = sex)) +
   geom_jitter(color = "green", alpha = 0.02) +
   geom_boxplot(outlier.shape = NA) +
-  labs(x = "Species of Animal", y = "Weight of Animal (g)", title = "Distribution of Weight by Species") +
+  labs(x = "Species of Animal", y = "Weight of Animal (g)", title = "Distribution of Animal Weight by Species") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   scale_color_manual(values = c("pink", "blue"))
 ```
@@ -688,7 +688,7 @@ ggplot(ca_childcare_long, aes(x = study_year,
 
 **DVS-3: I show creativity in my visualizations**
 
--   I can use non-standard colors (Example 1): Challenge 2
+-   I can use non-standard colors (Example 1): Challenge 2 Package Specification
 
 ```{r}
 #| label: dvs-3-1-ex-1
@@ -795,7 +795,7 @@ teacher_evals_clean |>
             unique_courses = n_distinct(course_id))
 ```
 
--   Example using `across()` : Lab 8
+-   Example using `across()` : Lab 8 Question 1
 
 ```{r}
 #| label: dvs-4-across
@@ -905,7 +905,7 @@ ggplot(teacher_evals_compare, aes(x = sen_level, fill = SET_level)) +
        fill = "Evaluation Rating")
 ```
 
--   I can modify the layout of my table to be more readable (e.g., `pivot_longer()` or `pivot_wider()`) : Challenge 4
+-   I can modify the layout of my table to be more readable (e.g., `pivot_longer()` or `pivot_wider()`) : Challenge 4 Summary Statistics
 
 ```{r}
 #| label: dvs-7-ex-2
@@ -985,7 +985,7 @@ clean_measurements <- function(x, min, max) {
 }
 ```
 
--   Example 2: Function that operates on data frames: Lab 8
+-   Example 2: Function that operates on data frames: Lab 8 Question 3
 
 ```{r}
 #| label: pe-2-2
@@ -1015,7 +1015,7 @@ plot_vars <- function(df, x_var, y_var, color_var = y_var) {
 }
 ```
 
--   Example 3: Function that operates on vectors *or* data frames: Lab 8
+-   Example 3: Function that operates on vectors *or* data frames: Lab 8 Question 2
 
 ```{r}
 #| label: pe-2-3
@@ -1056,7 +1056,7 @@ n_obs_missing
 
 **PE-4: I can use modern tools when carrying out my analysis.**
 
--   I can use functions which are not superseded or deprecated: Lab 5
+-   I can use functions which are not superseded or deprecated: Lab 5 Last step of finding the suspect
 
 ```{r}
 #| label: pe-4-1
