@@ -10,7 +10,7 @@ execute:
   echo: true
 ---
 
-[**My Grade:**]{.underline} I believe my grade equivalent to course work evidenced below to be an \_B-\_.
+[**My Grade:**]{.underline} I believe my grade equivalent to course work evidenced below to be a \_B\_.
 
 [**Learning Objective Evidence:**]{.underline} In the code chunks below, provide code from Lab or Challenge assignments where you believe you have demonstrated proficiency with the specified learning target. Be sure to specify **where** the code came from (e.g., Lab 4 Question 2).
 
@@ -853,27 +853,10 @@ med_childcare_cost_by_setting <- ca_childcare |>
 med_childcare_cost_by_setting
 ```
 
--   I can modify the text in my table to be more readable (e.g., bold face for column headers): Lab 4 Question 6 - revised to make bold column headers
+-   I can modify the text in my table to be more readable (e.g., bold face for column headers): Lab 4 Question 6 - revised to make bold column headers and better names
 
 ```{r}
 #| label: dvs-6-ex-2
-infant_cost_2018 <- ca_childcare |>
-  filter(study_year == 2018) |>
-  group_by(census_region) |>
-  summarize(med_mc_infant = median(mc_infant, na.rm = TRUE),
-            .groups = "drop") |>
-  arrange(desc(med_mc_infant))
-
-infant_cost_2018 |>
-  gt() |>
-  tab_style(style = cell_text(weight = "bold"),
-            locations = cells_column_labels(everything()))
-```
-
--   I can arrange my table to have an intuitive ordering: Lab 4 Question 6 - revised to make better names
-
-```{r}
-#| label: dvs-6-ex-3
 infant_cost_2018 <- ca_childcare |>
   filter(study_year == 2018) |>
   group_by(census_region) |>
@@ -881,7 +864,29 @@ infant_cost_2018 <- ca_childcare |>
             .groups = "drop") |>
   arrange(desc(med_cost_center-based_care_infant))
 
-infant_cost_2018
+infant_cost_2018 |>
+  gt() |>
+  tab_style(style = cell_text(weight = "bold"),
+            locations = cells_column_labels(everything()))
+```
+
+-   I can arrange my table to have an intuitive ordering: Lab 4 Question 5 - revised to make better names
+
+```{r}
+#| label: dvs-6-ex-3
+med_income_by_region <- ca_childcare |>
+  select(census_region, study_year, mhi_2018) |>
+  group_by(census_region, study_year) |>
+  summarize(median_income = median(mhi_2018, 
+                                   na.rm = TRUE), 
+            .groups = "drop") |>
+  pivot_wider(names_from = study_year,
+              values_from = median_income,
+              names_prefix = "median_income_") |>
+  select(census_region, median_income_2008, median_income_2018) |>
+  arrange(desc(median_income_2018)) 
+
+med_income_by_region
 ```
 
 **DVS-7: I show creativity in my tables.**
