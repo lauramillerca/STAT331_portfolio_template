@@ -332,7 +332,7 @@ suspect
 
 **WD-6: I can use filtering joins to filter rows from a dataframe.**
 
--   `semi_join()` : Lab 5 – revised to change inner_join() to semi_join() and to change as.Date to ymd, semi_join() is appropriate because
+-   `semi_join()` : Lab 5 – revised to change inner_join() to semi_join() and to change as.Date to ymd, semi_join() is appropriate because I want to keep only rows in x that have matches in y, without adding extra columns.
 
 ```{r}
 #| label: wd-6-semi
@@ -346,7 +346,7 @@ suspect_check_in <- get_fit_now_check_in |>
 suspect_check_in
 ```
 
--   `anti_join()` : lab 5 – revised to change inner_join() to anti_join() and to change as.Date to ymd, anti_join() is appropriate because
+-   `anti_join()` : lab 5 – revised to change inner_join() to anti_join() and to change as.Date to ymd, anti_join() is appropriate because I want to keep only rows that do not have matches in y, so I am joining everything that does not not have id starting with "48Z" i.e. everything that has an id starting with "48Z".
 
 ```{r}
 #| label: wd-6-anti
@@ -362,7 +362,7 @@ suspect_check_in
 
 **WD-7: I can pivot dataframes from long to wide and visa versa**
 
--   `pivot_longer()` : Challenge 4 Summary Statistics
+-   `pivot_longer()` : Challenge 4 Summary Statistics - revised to change column names
 
 ```{r}
 #| label: wd-7-long
@@ -376,13 +376,13 @@ med_childcare_cost_by_setting <- ca_childcare |>
             .groups = "drop") |>
   pivot_wider(names_from = study_year,
               values_from = median_cost,
-              names_prefix = "year_") |>
+              names_prefix = "median_childcare_cost_") |>
   arrange(setting, desc(year_2018))
 
 med_childcare_cost_by_setting
 ```
 
--   `pivot_wider()` : Challenge 4 Summary Statistics
+-   `pivot_wider()` : Challenge 4 Summary Statistics - revised to change column name
 
 ```{r}
 #| label: wd-7-wide
@@ -396,7 +396,7 @@ med_childcare_cost_by_setting <- ca_childcare |>
             .groups = "drop") |>
   pivot_wider(names_from = study_year,
               values_from = median_cost,
-              names_prefix = "year_") |>
+              names_prefix = "median_childcare_cost_") |>
   arrange(setting, desc(year_2018))
 
 med_childcare_cost_by_setting
@@ -447,27 +447,47 @@ teacher_evals_compare <- teacher_evals |>
 teacher_evals_compare
 ```
 
--   Example of function formatting
+-   Example of function formatting: Challenge 7 Question 2
 
 ```{r}
 #| label: r-2-3
+clean_measurements <- function(x, min, max) {
+  stopifnot("Input vector must be numeric" = is.numeric(x),
+            "min must be less than the max" = min < max)
 
+  case_when(x < min ~ as(NA, class(x)),
+            x > max ~ as(NA, class(x)),
+            TRUE ~ x)
+}
 ```
 
 **R-3: I can write robust programs that are resistant to changes in inputs.**
 
--   Example (any context)
+-   Example (any context): Lab 4 Question 6
 
 ```{r}
 #| label: r-3-example
+lowest_income_region <- med_income_by_region |>
+  slice_min(median_income_2018)
 
+lowest_income_region
 ```
 
--   Example (function stops)
+-   Example (function stops): Lab 7 Question 4
 
 ```{r}
 #| label: r-3-function-stops
+rescale_01 <- function(x) {
+  if (!is.numeric(x)) {
+    stop("Error: Input must be a numeric vector.")
+  }
+  if (length(x) <= 1) {
+    stop("Error: Input vector must have more than one element.")
+  }
 
+min <- min(x, na.rm = TRUE)
+  (x - min) / (max(x, na.rm = TRUE) - min)
+}
 ```
 
 ## Data Visualization & Summarization
@@ -500,16 +520,18 @@ ggplot(data = surveys, mapping = aes(x = weight, y = species)) +
   geom_jitter(color = "steelblue", alpha = 0.3)
 ```
 
--   At least two categorical variables: Challenge 2
+-   At least two categorical variables: Challenge 3 Question 2
 
 ```{r}
 #| label: dvs-2-cat
-ggplot(data = surveys, mapping = aes(x = species, y = weight, color = sex)) +
-  geom_jitter(color = "green", alpha = 0.02) +
-  geom_boxplot(outlier.shape = NA) +
-  labs(x = "Species", y = "Weight (g)", title = "Distribution of Weight by Species") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  scale_color_manual(values = c("pink", "blue"))
+ggplot(teacher_evals_compare, aes(x = sen_level, fill = SET_level)) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_manual(values = c("excellent" = "purple", "standard" = "orange")) +
+  labs(x = "Years of Experience",
+       y = "",
+       title = "Evaluation of Teachers' Use of Activities",
+       fill = "Evaluation Rating")
 ```
 
 -   Dates (time series plot): Challenge 4 Plot
@@ -559,28 +581,42 @@ ggplot(ca_childcare, aes(x = mhi_2018, y = mc_infant)) +
         plot.title = element_text(size = 10, face = "bold"))
 ```
 
--   I can modify my colors to be accessible to anyone's eyes: Challenge 3 Question 2
+-   I can modify my colors to be accessible to anyone's eyes: Lab 7 Question 3
 
 ```{r}
 #| label: dvs-2-ex-2
-ggplot(teacher_evals_compare, aes(x = sen_level, fill = SET_level)) +
-  geom_bar(position = "fill") +
-  scale_y_continuous(labels = scales::percent) +
-  scale_fill_manual(values = c("excellent" = "purple", "standard" = "orange")) +
-  labs(x = "Years of Experience",
-       y = "",
-       title = "Evaluation of Teachers' Use of Activities",
-       fill = "Evaluation Rating")
+missing_summary <- fish |>
+  group_by(year, section, trip, species) |>
+  summarise(prop_missing = mean(is.na(weight)),
+            .groups = "drop") |>
+  mutate(trip = recode(trip,
+                       "1" = "Trip 1",
+                       "2" = "Trip 2"))
+
+ggplot(missing_summary, aes(x = section,
+                            y = trip,
+                            fill = prop_missing)) +
+  geom_tile(color = "white") +
+  scale_fill_viridis_c(option = "plasma", name = "Proportion Missing") +
+  facet_wrap(~ species) +
+  labs(title = "Frequency of Missing Values Across Different Years, Sections, and Trips Collecting Data on Trout Outside Helena, Montana",
+       x = "Section",
+       y = "Trip") +
+  coord_flip() +
+  theme_minimal() +
+  theme(strip.text = element_text(size = 9),
+        plot.title = element_text(size = 7.5),
+        axis.text.x = element_text(size = 8))
 ```
 
--   I can modify my plot titles to clearly communicate the data context: Challenge 2
+-   I can modify my plot titles to clearly communicate the data context: Challenge 2 - revised to modify axis labels
 
 ```{r}
 #| label: dvs-2-ex-3
 ggplot(data = surveys, mapping = aes(x = species, y = weight, color = sex)) +
   geom_jitter(color = "green", alpha = 0.02) +
   geom_boxplot(outlier.shape = NA) +
-  labs(x = "Species", y = "Weight (g)", title = "Distribution of Weight by Species") +
+  labs(x = "Species of Animal", y = "Weight of Animal (g)", title = "Distribution of Weight by Species") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   scale_color_manual(values = c("pink", "blue"))
 ```
@@ -594,7 +630,7 @@ ca_childcare_long <- ca_childcare |>
   mutate(study_year = as.numeric(study_year)) |>
   pivot_longer(cols = c(mc_infant, mc_toddler, mc_preschool),
                names_to = "age_group",
-               values_to = "median_weekly_cost") |>
+               values_to = "median_weekly_cost ($)") |>
   mutate(age_group = recode(age_group,
                             mc_infant = "Infant",
                             mc_toddler = "Toddler",
@@ -603,34 +639,9 @@ ca_childcare_long <- ca_childcare |>
   group_by(age_group, census_region) |>
   mutate(census_region = fct_reorder(census_region, median_weekly_cost, .fun = max)) |>
   ungroup()
-        
-
-ggplot(ca_childcare_long, aes(x = study_year, 
-                              y = median_weekly_cost,
-                              color = census_region,
-                              group = interaction(census_region, county_name))) +
-  geom_point(alpha = 0.3) +
-  geom_smooth(aes(group = census_region), 
-              method = "loess", 
-              se = FALSE, 
-              linewidth = 1) +
-  facet_wrap(~ age_group, ncol = 3, scales = "fixed") +
-  labs(x = "Study Year",
-       y = "",
-       title = "Weekly Median Price for Center-Based Childcare ($)",
-       color = "California Region") +
-  theme_bw(base_size = 10) +
-  scale_y_continuous(limits = c(100, 500)) +
-  scale_x_continuous(limits = c(2008, 2018),
-                     breaks = seq(2008, 2018, by = 2)) +
-  theme(axis.text.x = element_text(size = 6),
-        strip.text = element_text(size = 10),
-        legend.text = element_text(size = 9),
-        legend.title = element_text(size = 10),
-        panel.spacing = unit(0.5, "cm"))
 ```
 
--   I can reorder my legend to align with the colors in my plot: Lab 4 Question 7
+-   I can reorder my legend to align with the colors in my plot: Lab 4 Question 7 - revised to change interaction() to fct_reorder()
 
 ```{r}
 #| label: dvs-2-ex-5
@@ -646,14 +657,14 @@ ca_childcare_long <- ca_childcare |>
                             mc_preschool = "Preschool"),
          age_group = factor(age_group, levels = c("Infant", "Toddler", "Preschool"))) |>
   group_by(age_group, census_region) |>
-  mutate(census_region = fct_reorder(census_region, median_weekly_cost, .fun = max)) |>
+  mutate(census_region = fct_reorder(census_region, median_weekly_cost, .fun = max),
+         county_name_reordered = fct_reorder(county_name, median_weekly_cost, .fun = median)) |>
   ungroup()
         
-
 ggplot(ca_childcare_long, aes(x = study_year, 
                               y = median_weekly_cost,
                               color = census_region,
-                              group = interaction(census_region, county_name))) +
+                              group = county_name_reordered)) +
   geom_point(alpha = 0.3) +
   geom_smooth(aes(group = census_region), 
               method = "loess", 
@@ -689,30 +700,88 @@ ggplot(data = surveys, mapping = aes(x = species, y = weight, color = sex)) +
   scale_color_manual(values = c("pink", "blue"))
 ```
 
--   I can use non-standard colors (Example 2): Challenge 2
+-   I can use non-standard colors (Example 2): Challenge 3 Question 2
 
 ```{r}
 #| label: dvs-3-1-ex-2
-ggplot(data = surveys, mapping = aes(x = weight, y = species)) +
-  geom_jitter(color = "steelblue", alpha = 0.1) +
-  geom_boxplot(outlier.shape = NA) +
-  labs(x = "Weight (g)", y = "Species", title = "Weight Distribution by Species") +
-  theme(panel.grid.minor = element_blank()) +
-  theme(axis.title.y = element_text(margin = margin(r = 10)))
+ggplot(teacher_evals_compare, aes(x = sen_level, fill = SET_level)) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_manual(values = c("excellent" = "purple", "standard" = "orange")) +
+  labs(x = "Years of Experience",
+       y = "",
+       title = "Evaluation of Teachers' Use of Activities",
+       fill = "Evaluation Rating")
 ```
 
--   I can use annotations (e.g., `geom_text()`)
+-   I can use annotations (e.g., `geom_text()`) : Lab 7 Question 5 - revised to add geom_text
 
 ```{r}
 #| label: dvs-3-2
+fish <- fish |>
+  mutate(length_cm = length / 10,
+         condition_index = (weight / (length_cm^3)) * 100)
 
+condition_summary <- fish |>
+  filter(!is.na(condition_index)) |>
+  filter(species != "Bull" | condition_index <= 500) |>
+  filter(species != "Brown" | condition_index <= 30) |>
+  group_by(year, species) |>
+  summarise(mean_condition = mean(condition_index),
+            .groups = "drop")
+
+ggplot(condition_summary, aes(x = year, y = mean_condition, color = species)) +
+  geom_line(size = 1) +
+  geom_point(size = 2) +
+  geom_text(aes(label = round(mean_condition, 1)),
+            vjust = -0.7, 
+            size = 3,
+            show.legend = FALSE) +
+  labs(title = "Trends in Fish Condition Over Time by Species",
+       x = "Year",
+       y = "Mean Condition Index",
+       color = "Species") +
+  theme_minimal()
 ```
 
--   I can choose creative geometries (e.g., `geom_segment()`, `geom_ribbon)()`)
+-   I can choose creative geometries (e.g., `geom_segment()`, `geom_ribbon)()`): Lab 7 Question 5 - revised to add geom_segment
 
 ```{r}
 #| label: dvs-3-3
+fish <- fish |>
+  mutate(length_cm = length / 10,
+         condition_index = (weight / (length_cm^3)) * 100)
 
+condition_summary <- fish |>
+  filter(!is.na(condition_index)) |>
+  filter(species != "Bull" | condition_index <= 500) |>
+  filter(species != "Brown" | condition_index <= 30) |>
+  group_by(year, species) |>
+  summarise(mean_condition = mean(condition_index),
+            .groups = "drop")
+
+condition_next <- condition_summary |>
+  mutate(year_prev = year - 1)
+
+segments <- condition_summary |>
+  left_join(condition_next, by = c("species", "year" = "year_prev")) |>
+  filter(!is.na(mean_condition_next))
+
+ggplot() +
+  geom_segment(data = segments, aes(x = year, y = mean_condition, xend = year_next,
+                                    yend = mean_condition_next, color = species),
+               linewidth = 1) +
+  geom_point(data = condition_summary,
+             aes(x = year, y = mean_condition, color = species), size = 2) +
+  geom_text(aes(label = round(mean_condition, 1)),
+            vjust = -0.7, 
+            size = 3,
+            show.legend = FALSE) +
+  labs(title = "Trends in Fish Condition Over Time by Species",
+       x = "Year",
+       y = "Mean Condition Index",
+       color = "Species") +
+  theme_minimal()
 ```
 
 **DVS-4: I can calculate numerical summaries of variables.**
@@ -726,11 +795,15 @@ teacher_evals_clean |>
             unique_courses = n_distinct(course_id))
 ```
 
--   Example using `across()` :
+-   Example using `across()` : Lab 8
 
 ```{r}
 #| label: dvs-4-across
-
+rescale_column <- function(df, cols) {
+  df |>
+    mutate(across(.cols = {{ cols }},
+                  .fns = ~ rescale_01(.x)))
+}
 ```
 
 **DVS-5: I can find summaries of variables across multiple groups.**
@@ -760,36 +833,30 @@ teacher_evals_clean |>
 
 **DVS-6: I can create tables which make my summaries clear to the reader.**
 
--   I can modify my column names to clearly communicate the data context: Challenge 3 Question 1
+-   I can modify my column names to clearly communicate the data context: Challenge 4 Summary Statistics
 
 ```{r}
 #| label: dvs-6-ex-1
-teacher_evals_compare <- teacher_evals |>
-  filter(question_no == 903) |>
-  mutate(SET_level = if_else(SET_score_avg >= 4, "excellent", "standard"),
-         sen_level = case_when(seniority <= 4 ~ "junior",
-                               seniority > 4 ~ "senior")) |>
-  select(course_id, SET_level, sen_level)
+med_childcare_cost_by_setting <- ca_childcare |>
+  select(study_year, mcsa, mfccsa) |>
+  pivot_longer(cols = c(mcsa, mfccsa),
+               names_to = "setting",
+               values_to = "cost") |>
+  group_by(setting, study_year) |>
+  summarise(median_cost = median(cost, na.rm = TRUE),
+            .groups = "drop") |>
+  pivot_wider(names_from = study_year,
+              values_from = median_cost,
+              names_prefix = "median_childcare_cost_") |>
+  arrange(setting, desc(year_2018))
 
-teacher_evals_compare
+med_childcare_cost_by_setting
 ```
 
--   I can modify the text in my table to be more readable (e.g., bold face for column headers): Challenge 2 Spicy
+-   I can modify the text in my table to be more readable (e.g., bold face for column headers): Lab 4 Question 6 - revised to make bold column headers
 
 ```{r}
 #| label: dvs-6-ex-2
-ggplot(data = surveys, mapping = aes(x = weight, y = species)) +
-  geom_jitter(color = "steelblue", alpha = 0.1) +
-  geom_boxplot(outlier.shape = NA) +
-  labs(x = "Weight (g)", y = "Species", title = "Weight Distribution by Species") +
-  theme(panel.grid.minor = element_blank()) +
-  theme(axis.title.y = element_text(margin = margin(r = 10)))
-```
-
--   I can arrange my table to have an intuitive ordering: Lab 4 Question 6
-
-```{r}
-#| label: dvs-6-ex-3
 infant_cost_2018 <- ca_childcare |>
   filter(study_year == 2018) |>
   group_by(census_region) |>
@@ -797,16 +864,40 @@ infant_cost_2018 <- ca_childcare |>
             .groups = "drop") |>
   arrange(desc(med_mc_infant))
 
+infant_cost_2018 |>
+  gt() |>
+  tab_style(style = cell_text(weight = "bold"),
+            locations = cells_column_labels(everything()))
+```
+
+-   I can arrange my table to have an intuitive ordering: Lab 4 Question 6 - revised to make better names
+
+```{r}
+#| label: dvs-6-ex-3
+infant_cost_2018 <- ca_childcare |>
+  filter(study_year == 2018) |>
+  group_by(census_region) |>
+  summarize(med_cost_center-based_care_infant = median(mc_infant, na.rm = TRUE),
+            .groups = "drop") |>
+  arrange(desc(med_cost_center-based_care_infant))
+
 infant_cost_2018
 ```
 
 **DVS-7: I show creativity in my tables.**
 
--   I can use non-default colors
+-   I can use non-default colors: Challenge 3 Question 2
 
 ```{r}
 #| label: dvs-7-ex-1
-
+ggplot(teacher_evals_compare, aes(x = sen_level, fill = SET_level)) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_manual(values = c("excellent" = "purple", "standard" = "orange")) +
+  labs(x = "Years of Experience",
+       y = "",
+       title = "Evaluation of Teachers' Use of Activities",
+       fill = "Evaluation Rating")
 ```
 
 -   I can modify the layout of my table to be more readable (e.g., `pivot_longer()` or `pivot_wider()`) : Challenge 4
@@ -823,7 +914,7 @@ med_childcare_cost_by_setting <- ca_childcare |>
             .groups = "drop") |>
   pivot_wider(names_from = study_year,
               values_from = median_cost,
-              names_prefix = "year_") |>
+              names_prefix = "median_childcare_cost_") |>
   arrange(setting, desc(year_2018))
 
 med_childcare_cost_by_setting
@@ -854,11 +945,16 @@ med_income_by_region <- ca_childcare |>
 med_income_by_region
 ```
 
--   using `across()` :
+-   using `across()` : Lab 7 Question 2
 
 ```{r}
 #| label: pe-1-across
-
+n_obs_missing <- fish |>
+  summarise(across(everything(), ~ sum(is.na(.x)))) |>
+  pivot_longer(cols = everything(),
+               names_to = "variable",
+               values_to = "n_missing")
+n_obs_missing
 ```
 
 -   using functions from the `map()` family
@@ -870,83 +966,73 @@ med_income_by_region
 
 **PE-2: I can write functions to reduce repetition in my code.**
 
--   Example 1: Function that operates on vectors: Lab 3 Question 12
+-   Example 1: Function that operates on vectors: Lab 7 Question 2
 
 ```{r}
 #| label: pe-2-1
-resp_avg <- teacher_evals_clean |>
-  filter(academic_degree %in% c("dr", "prof")) |>
-  group_by(teacher_id, seniority, sex) |>
-  summarise(n_courses = n_distinct(course_id),
-            avg_resp = mean(resp_share, na.rm = TRUE),
-            .groups = "drop")
+clean_measurements <- function(x, min, max) {
+  stopifnot("Input vector must be numeric" = is.numeric(x),
+            "min must be less than the max" = min < max)
 
-highest_resp_avg <- resp_avg |>
-  filter(avg_resp == max(avg_resp))
-
-lowest_resp_avg <- resp_avg |>
-  filter(avg_resp == min(avg_resp))
-
-highest_resp_avg
+  case_when(x < min ~ as(NA, class(x)),
+            x > max ~ as(NA, class(x)),
+            TRUE ~ x)
+}
 ```
 
--   Example 2: Function that operates on data frames: Lab 4 Question 5
+-   Example 2: Function that operates on data frames: Lab 8
 
 ```{r}
 #| label: pe-2-2
-med_income_by_region <- ca_childcare |>
-  select(census_region, study_year, mhi_2018) |>
-  group_by(census_region, study_year) |>
-  summarize(median_income = median(mhi_2018, 
-                                   na.rm = TRUE), 
-            .groups = "drop") |>
-  pivot_wider(names_from = study_year,
-              values_from = median_income,
-              names_prefix = "year_") |>
-  select(census_region, year_2008, year_2018) |>
-  arrange(desc(year_2018)) |>
-  rename(median_income_2008 = year_2008,
-         median_income_2018 = year_2018)
+plot_vars <- function(df, x_var, y_var, color_var = y_var) {
 
-med_income_by_region
+  x_label <- as_label(enquo(x_var)) |>
+    str_replace_all("_", " ") |>
+    str_to_title()
+  
+  y_label <- as_label(enquo(y_var)) |>
+    str_replace_all("_", " ") |>
+    str_to_title()
+  
+  color_label <- as_label(enquo(color_var)) |>
+    str_replace_all("_", " ") |>
+    str_to_title()
+  
+  plot_title <- str_glue("Scatterplot of {y_label} vs {x_label}")
+
+  ggplot(df, aes(x = {{ x_var }}, y = {{ y_var }}, color = {{ color_var }})) +
+    geom_point(alpha = 0.5, size = 3) +
+    labs(x = x_label,
+         y = y_label,
+         color = color_label,
+         title = plot_title) +
+    theme_minimal()
+}
 ```
 
--   Example 3: Function that operates on vectors *or* data frames: Challenge 4
+-   Example 3: Function that operates on vectors *or* data frames: Lab 8
 
 ```{r}
 #| label: pe-2-3
-med_childcare_cost_by_setting <- ca_childcare |>
-  mutate(study_year = as.integer(study_year)) |>
-  select(study_year, mcsa, mfccsa) |>
-  pivot_longer(cols = c(mcsa, mfccsa),
-               names_to = "setting",
-               values_to = "cost") |>
-  group_by(setting, study_year) |>
-  summarise(median_cost = median(cost, na.rm = TRUE),
-            .groups = "drop")
-
-ggplot(med_childcare_cost_by_setting, aes(x = study_year,
-                                          y = median_cost,
-                                          color = setting)) +
-    geom_line(size = 1) +
-    geom_point(size = 2, alpha = 0.5) +
-    scale_x_continuous(breaks = 
-                         seq(min(med_childcare_cost_by_setting$study_year),
-                        max(med_childcare_cost_by_setting$study_year), by = 1)) +
-    labs(title = "Median Full-Time Weekly Childcare Costs in CA by Setting",
-         x = "Study Year",
-         y = "Median Weekly Cost ($)",
-         color = "Setting") +
-    theme_bw()
+pivot_table <- function(df, row_var, col_var) {
+  table <- df |>
+    count({{ row_var }}, {{ col_var }}) |>
+    pivot_wider(names_from = {{ col_var }},
+                values_from = n,
+                values_fill = 0) |>
+    janitor::adorn_totals(where = "both")
+}
 ```
 
 **PE-3:I can use iteration to reduce repetition in my code.**
 
--   using `across()`
+-   using `across()` : Lab 7 Question 1
 
 ```{r}
 #| label: pe-3-across
-
+n_obs_missing <- fish |>
+  summarise(across(everything(), ~ sum(is.na(.x))))
+n_obs_missing
 ```
 
 -   using a `map()` function with **one** input (e.g., `map()`, `map_chr()`, `map_dbl()`, etc.)
@@ -965,44 +1051,39 @@ ggplot(med_childcare_cost_by_setting, aes(x = study_year,
 
 **PE-4: I can use modern tools when carrying out my analysis.**
 
--   I can use functions which are not superseded or deprecated: Lab 3 Question 9
+-   I can use functions which are not superseded or deprecated: Lab 5
 
 ```{r}
 #| label: pe-4-1
-teacher_evals_clean |>
-  group_by(course_id, teacher_id) |>
-  summarise(n_questions = n_distinct(question_no), groups = "drop") |>
-  filter(n_questions == 9) |>
-  select(course_id, teacher_id)
+suspect <- get_fit_now_check_in |>
+  inner_join(get_fit_now_member, by = c("membership_id" = "id")) |>
+  mutate(check_in_date = ymd(check_in_date)) |>
+  filter(check_in_date == as.Date("2018-01-09"),
+         str_detect(membership_id, "^48Z")) |>
+  inner_join(person, by = c("person_id" = "id"))
+
+suspect <- suspect |>
+  inner_join(drivers_license, by = c("license_id" = "id")) |>
+  filter(str_detect(plate_number, "H42W"))
+suspect
 ```
 
--   I can connect a data wrangling pipeline into a `ggplot()` : Challenge 4
+-   I can connect a data wrangling pipeline into a `ggplot()` : Lab 4 Question 8 - revised to connect data wrangling pipeline which filters NA values before plotting
 
 ```{r}
 #| label: pe-4-2
-med_childcare_cost_by_setting <- ca_childcare |>
-  mutate(study_year = as.integer(study_year)) |>
-  select(study_year, mcsa, mfccsa) |>
-  pivot_longer(cols = c(mcsa, mfccsa),
-               names_to = "setting",
-               values_to = "cost") |>
-  group_by(setting, study_year) |>
-  summarise(median_cost = median(cost, na.rm = TRUE),
-            .groups = "drop")
-
-ggplot(med_childcare_cost_by_setting, aes(x = study_year,
-                                          y = median_cost,
-                                          color = setting)) +
-    geom_line(size = 1) +
-    geom_point(size = 2, alpha = 0.5) +
-    scale_x_continuous(breaks = 
-                         seq(min(med_childcare_cost_by_setting$study_year),
-                        max(med_childcare_cost_by_setting$study_year), by = 1)) +
-    labs(title = "Median Full-Time Weekly Childcare Costs in CA by Setting",
-         x = "Study Year",
-         y = "Median Weekly Cost ($)",
-         color = "Setting") +
-    theme_bw()
+ca_childcare |>
+  filter(!is.na(mhi_2018), !is.na(mc_infant)) |>
+  ggplot(aes(x = mhi_2018, y = mc_infant)) +
+  geom_point(alpha = 0.5, color = "blue") +
+  geom_smooth(method = "lm", se = TRUE, color = "red", size = 1) +
+  labs(x = "Median Household Income 2018 ($)",
+       y = "Median Weekly Cost for Infant Center-Based Childcare ($)",
+       title = "Relationship Between Household Income and Infant Childcare Costs in CA",
+       color = "Region") +
+  theme_bw() +
+  theme(axis.title.y = element_text(size = 8),
+        plot.title = element_text(size = 10, face = "bold"))
 ```
 
 ## Data Simulation & Statistical Models
@@ -1062,7 +1143,7 @@ summary(reg_mod1)
 
 <!-- How did you revise your thinking throughout the course? How did you revise your thinking on the code examples you have provided in your portfolio? -->
 
-I revised my thinking in several ways throughout the course. I learned about programming efficiency, and how to write code that doesn't repeat the same function call multiple times. I also learned how to minimize the amount of objects saved in my code. Additionally, I learned how to reformat tables and graphs by altering text type, size, color, ordering, and placement. I learned how to use the here() package to import data, and I learned how to use Quarto formatting options to surpress messages from loading in packages, etc.
+I revised my thinking in several ways throughout the course. I learned about programming efficiency, and how to write code that doesn't repeat the same function call multiple times. I also learned how to minimize the amount of objects saved in my code. Additionally, I learned how to reformat tables and graphs by altering text type, size, color, ordering, and placement. I learned how to use the here() package to import data, and I learned how to use Quarto formatting options to suppress messages from loading in packages, etc.
 
 <!-- For the revisions included in your Portfolio, to help me understand the nature of your revisions, please denote somehow the feedback I provided you (e.g., boldface, italics, colored text) before your revisions. -->
 
