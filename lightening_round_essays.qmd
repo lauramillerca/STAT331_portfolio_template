@@ -6,16 +6,22 @@ editor: visual
 
 **Answer each of the following questions with *one sentence* including a brief explanation.**
 
-1. Finish the sentence with another student’s name: "If [Name of Student] doesn’t earn an A, then nobody should, because..." Explain your choice and your reasoning.
+1.  Finish the sentence with another student’s name: "If \[Name of Student\] doesn’t earn an A, then nobody should, because..." Explain your choice and your reasoning.
 
+    If Addie doesn't earn an A, then nobody should, because she consistently knew how to apply the tools we used in class in a creative way to produce cleanly-written code and a nice output. She was also great at combining concepts to perform tasks.
 
-2. What was the most difficult part of the class for you? List a general topic, a specific problem, a kind of work we did, etc. and explain why.
+2.  What was the most difficult part of the class for you? List a general topic, a specific problem, a kind of work we did, etc. and explain why.
 
+The readings before class were difficult for me, because I think I learn much better when I have an instructor going over the material than when I try to read through it myself. I also found it most difficult to edit the format of tables and create merged columns and rows.
 
-3. What was the easiest part of the class for you? Explain why.
+1.  What was the easiest part of the class for you? Explain why.
 
+The easiest part of the class for me was the pair programming activities, because I feel like I was almost always prepared with all the tools I needed to complete the tasks on those activities, and with the help of a partner, was able to figure out everything with just a bit of guidance.
 
-4. What part of the class surprised or interested you the most? Explain why.
+1.  What part of the class surprised or interested you the most? Explain why.
 
+The Lab where we investigated the murder suspect interested me the most because it seemed like a real-world problem that somebody might actually use these tools to tackle, so we got to see firsthand how that process works and how to perform it ourselves.
 
-5. Give one piece of advice to a student just beginning a quarter of STAT 331 that will help them be successful in learning.
+1.  Give one piece of advice to a student just beginning a quarter of STAT 331 that will help them be successful in learning.
+
+I would encourage a future student to work hard on the readings before class to be prepared and knowledgeable on the material we may need to use, and to stay on-top of deadlines, making sure you resubmit assignments whenever possible.
